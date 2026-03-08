@@ -1,18 +1,14 @@
 package com.bookmystayapp.main;
 
 import java.util.Collection;
-import java.util.Scanner;
 
-import com.bookmystayapp.exception.AuthException;
-import com.bookmystayapp.exception.InventoryException;
-import com.bookmystayapp.hotel.HotelGuest;
-import com.bookmystayapp.hotel.HotelAdmin;
-import com.bookmystayapp.model.Role;
-import com.bookmystayapp.model.RoomType;
-import com.bookmystayapp.model.User;
-import com.bookmystayapp.repository.InventoryRepository;
-import com.bookmystayapp.repository.UserRepository;
-import com.bookmystayapp.service.AuthService;
+import java.util.Scanner;
+import java.util.Queue;
+
+import com.bookmystayapp.exception.*;
+import com.bookmystayapp.hotel.*;
+import com.bookmystayapp.model.*;
+import com.bookmystayapp.repository.*;
 import com.bookmystayapp.service.*;
 
 public class Main {
@@ -108,7 +104,8 @@ public class Main {
             System.out.println("4. Delete Room Type");
             System.out.println("5. View Inventory");
             System.out.println("6. Process next Request");
-            System.out.println("7. Logout");
+            System.out.println("7. View Pending Requests");
+            System.out.println("8. Logout");
 
             System.out.print("Enter choice: ");
             int choice = Integer.parseInt(scanner.nextLine());
@@ -168,8 +165,10 @@ public class Main {
                     case 5 -> viewInventory(admin.viewInventory());
                     
                     case 6 -> bookingQueueService.processNextBooking();
+                    
+                    case 7 -> viewPendingRequests(bookingQueueService);
 
-                    case 7 -> {
+                    case 8 -> {
                         System.out.println("Logged out.");
                         return;
                     }
@@ -237,6 +236,24 @@ public class Main {
 
         for (RoomType room : rooms) {
             System.out.println(room);
+        }
+    }
+    
+    private static void viewPendingRequests(BookingQueueService bookingQueueService) {
+
+        Queue<Reservation> requests = bookingQueueService.getPendingRequests();
+
+        if(requests.isEmpty()) {
+            System.out.println("No pending booking requests.");
+            return;
+        }
+
+        System.out.println("\n===== Pending Booking Requests =====");
+
+        int i = 1;
+
+        for(Reservation r : requests) {
+            System.out.println(i++ + ". " + r);
         }
     }
 }

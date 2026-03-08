@@ -1,7 +1,9 @@
 package com.bookmystayapp.repository;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Collection;
 
 import com.bookmystayapp.exception.InventoryException;
@@ -10,14 +12,19 @@ import com.bookmystayapp.model.RoomType;
 public class InventoryRepository {
 	
 	private HashMap<String, RoomType> roomInventory;
+	private HashMap<String, Set<String>> assignedRooms;
+	private Set<String> bookedRoomIds;
 	
 	public InventoryRepository() {
 		this.roomInventory = new HashMap<String, RoomType>();
+		this.assignedRooms = new HashMap<String, Set<String>>();
+		this.bookedRoomIds = new HashSet<String>();
 	}
 	
 	public void addRoomType(RoomType roomtype) throws InventoryException {
 		if(roomtype == null) throw new InventoryException("Room type cannot be null");
 		roomInventory.put(roomtype.getType(), roomtype);
+		assignedRooms.put(roomtype.getType(), new HashSet<String>());
 	}
 	
 	public RoomType getRoomType(String type) throws InventoryException{
@@ -66,6 +73,25 @@ public class InventoryRepository {
 	
 	public Collection<RoomType> getAllRoomInventory(){
 		return roomInventory.values();
+	}
+	
+	public String generateRoomId(String roomType, int number) {
+		return roomType.substring(0,2).toUpperCase() + number;
+	}
+	
+	public Set<String> getAssignedRooms(String type){
+		if(type == null || type.isBlank()) throw new InventoryException("Room type cannot be null");
+		if(!assignedRooms.containsKey(type)) throw new InventoryException("Room type not found");
+		return assignedRooms.get(type);
+	}
+	
+	public boolean isRoomBooked(String roomId) {
+		return bookedRoomIds.contains(roomId);
+	}
+	
+	public void addBookedRoom(String roomId) {
+		if(roomId == null || roomId.isBlank()) throw new InventoryException("Room Id cannot be null");
+		bookedRoomIds.add(roomId);
 	}
 	
 }

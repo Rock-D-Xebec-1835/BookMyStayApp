@@ -1,7 +1,9 @@
 package com.bookmystayapp.service;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.ArrayList;
 
 import com.bookmystayapp.exception.InventoryException;
@@ -69,18 +71,33 @@ public class InventoryService {
 	}
 	
 	public List<RoomType> searchRooms() {
-
 	    Collection<RoomType> rooms = inventoryRepository.getAllRoomInventory();
-
 	    List<RoomType> availableRooms = new ArrayList<>();
-
 	    for(RoomType room : rooms) {
 	        if(room.getAvailableRooms() > 0) {
 	            availableRooms.add(room);
 	        }
 	    }
-
 	    return availableRooms;
+	}
+	
+	public Set<String> allocateRooms(String type, int count){
+		if(type == null || type.isBlank()) throw new InventoryException("Room type cannot be null");
+		if(count <= 0) throw new InventoryException("Room count must be positive");
+		RoomType room = inventoryRepository.getRoomType(type);
+		if(room.getAvailableRooms() < count) throw new InventoryException("Not enough rooms available");
+		Set<String> assigned = inventoryRepository.getAssignedRooms(type);
+		Set<String> allocated = new HashSet<String>();
+		int start = assigned.size() + 1;
+		for(int i = 0; i < count; i++) {
+			String roomId = inventoryRepository.generateRoomId(type, start + i);
+			if(inventoryRepository.isRoomBooked(roomId)) throw new InventoryException("Duplicate room ID detected");
+			inventoryRepository.addBookedRoom(roomId);
+			assigned.add(roomId);
+			allocated.add(roomId);
+		}
+		decreaseRoomCount(type, count);
+		return allocated;
 	}
 
 }

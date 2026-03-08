@@ -1,5 +1,6 @@
 package com.bookmystayapp.service;
 import com.bookmystayapp.model.*;
+import java.util.Set;
 import java.util.Queue;
 import java.util.LinkedList;
 
@@ -27,18 +28,30 @@ public class BookingQueueService {
 
         Reservation reservation = bookingQueue.poll();
 
-        try {
+        try{
+        	Set<String> allocated =
+        	    inventoryService.allocateRooms(
+        	        reservation.getRoomType(),
+        		    reservation.getNoOfRooms()
+        		);
 
-            inventoryService.decreaseRoomCount(
-                reservation.getRoomType(),
-                reservation.getNoOfRooms()
-            );
-
-            System.out.println("Booking confirmed for " + reservation.getGuestEmail());
-
+        		System.out.println(
+        		    "Booking confirmed for "
+        		    + reservation.getGuestEmail()
+        		    + " Rooms: "
+        		    + allocated
+        		);
         } catch (Exception e) {
 
             System.out.println("Booking failed → " + e.getMessage());
         }
+    }
+    
+    public Queue<Reservation> getPendingRequests(){
+    	return bookingQueue;
+    }
+    
+    public int getPendingRequestCount() {
+    	return bookingQueue.size();
     }
 }
