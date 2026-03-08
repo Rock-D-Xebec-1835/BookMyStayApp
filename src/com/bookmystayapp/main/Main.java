@@ -13,7 +13,7 @@ import com.bookmystayapp.model.User;
 import com.bookmystayapp.repository.InventoryRepository;
 import com.bookmystayapp.repository.UserRepository;
 import com.bookmystayapp.service.AuthService;
-import com.bookmystayapp.service.InventoryService;
+import com.bookmystayapp.service.*;
 
 public class Main {
 
@@ -28,10 +28,12 @@ public class Main {
         // Initialize services
         AuthService authService = new AuthService(userRepository);
         InventoryService inventoryService = new InventoryService(inventoryRepository);
+        BookingQueueService bookingQueueService = new BookingQueueService(inventoryService);
+
 
         // Controllers
         HotelAdmin adminController = new HotelAdmin(inventoryService);
-        HotelGuest guestController = new HotelGuest(inventoryService);
+        HotelGuest guestController = new HotelGuest(inventoryService, bookingQueueService);
 
         while (true) {
 
@@ -47,7 +49,7 @@ public class Main {
 
                 switch (choice) {
 
-                    case 1 -> login(authService, adminController, guestController);
+                    case 1 -> login(authService, adminController, guestController, bookingQueueService);
 
                     case 2 -> register(authService);
 
@@ -65,7 +67,7 @@ public class Main {
         }
     }
 
-    private static void login(AuthService authService, HotelAdmin admin, HotelGuest guest) {
+    private static void login(AuthService authService, HotelAdmin admin, HotelGuest guest, BookingQueueService bookingQueueService) {
 
         System.out.print("Enter email: ");
         String email = scanner.nextLine();
@@ -76,9 +78,9 @@ public class Main {
         User user = authService.login(email, password);
 
         if (user.getRole() == Role.ADMIN) {
-            adminMenu(admin);
+            adminMenu(admin, bookingQueueService);
         } else {
-            guestMenu(guest);
+            guestMenu(guest, user);
         }
     }
 
@@ -95,7 +97,7 @@ public class Main {
         System.out.println("Registration successful.");
     }
 
-    private static void adminMenu(HotelAdmin admin) {
+    private static void adminMenu(HotelAdmin admin, BookingQueueService bookingQueueService) {
 
         while (true) {
 
@@ -105,7 +107,8 @@ public class Main {
             System.out.println("3. Update Room Price");
             System.out.println("4. Delete Room Type");
             System.out.println("5. View Inventory");
-            System.out.println("6. Logout");
+            System.out.println("6. Process next Request");
+            System.out.println("7. Logout");
 
             System.out.print("Enter choice: ");
             int choice = Integer.parseInt(scanner.nextLine());
@@ -163,8 +166,10 @@ public class Main {
                     }
 
                     case 5 -> viewInventory(admin.viewInventory());
+                    
+                    case 6 -> bookingQueueService.processNextBooking();
 
-                    case 6 -> {
+                    case 7 -> {
                         System.out.println("Logged out.");
                         return;
                     }
@@ -178,28 +183,46 @@ public class Main {
         }
     }
 
-    private static void guestMenu(HotelGuest guest) {
+    private static void guestMenu(HotelGuest guest, User user) {
 
         while (true) {
 
             System.out.println("\n===== Guest Menu =====");
             System.out.println("1. Search for Rooms");
-            System.out.println("2. Logout");
+            System.out.println("2. Request Booking");
+            System.out.println("3. Logout");
 
             System.out.print("Enter choice: ");
             int choice = Integer.parseInt(scanner.nextLine());
+            
+            try {
+            	switch (choice) {
 
-            switch (choice) {
-
-                case 1 -> viewInventory(guest.searchRooms());
-
-                case 2 -> {
-                    System.out.println("Logged out.");
-                    return;
-                }
-
-                default -> System.out.println("Invalid choice");
+	                case 1 -> viewInventory(guest.searchRooms());
+	                
+	                case 2 -> {
+	
+	                    System.out.print("Enter room type: ");
+	                    String roomType = scanner.nextLine();
+	
+	                    System.out.print("Enter number of rooms: ");
+	                    int quantity = Integer.parseInt(scanner.nextLine());
+	
+	                    guest.requestBooking(user.getEmail(), roomType, quantity);
+	                }
+	
+	                case 3 -> {
+	                    System.out.println("Logged out.");
+	                    return;
+	                }
+	
+	                default -> System.out.println("Invalid choice");
+            	}
             }
+            catch(InventoryException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+            
         }
     }
 

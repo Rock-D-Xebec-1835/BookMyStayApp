@@ -44,7 +44,7 @@ public class InventoryService {
 		if(rooms < 0) throw new InventoryException("Room count cannot be negative");
 		if(!inventoryRepository.containsRoomType(type)) throw new InventoryException("Room type not found" + type);
 		int existing = inventoryRepository.getRoomType(type).getAvailableRooms();
-		if(existing - rooms < 0) throw new InventoryException("Room count cannot be negative");
+		if(existing - rooms < 0) throw new InventoryException("Not enough rooms available for " + type);
 		inventoryRepository.updateRoomCount(type, existing - rooms);
 	}
 	
@@ -82,4 +82,6 @@ public class InventoryService {
 
 	    return availableRooms;
 	}
+
 }
+
