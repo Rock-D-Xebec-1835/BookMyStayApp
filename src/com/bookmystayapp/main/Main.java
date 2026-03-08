@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import java.util.Scanner;
 import java.util.Queue;
+import java.util.List;
 
 import com.bookmystayapp.exception.*;
 import com.bookmystayapp.hotel.*;
@@ -20,16 +21,17 @@ public class Main {
         // Initialize repositories
         UserRepository userRepository = new UserRepository();
         InventoryRepository inventoryRepository = new InventoryRepository();
+        ServiceRepository serviceRepository = new ServiceRepository();
 
         // Initialize services
         AuthService authService = new AuthService(userRepository);
         InventoryService inventoryService = new InventoryService(inventoryRepository);
         BookingQueueService bookingQueueService = new BookingQueueService(inventoryService);
-
+        ServiceManagementService serviceManagementService = new ServiceManagementService(serviceRepository);
 
         // Controllers
         HotelAdmin adminController = new HotelAdmin(inventoryService);
-        HotelGuest guestController = new HotelGuest(inventoryService, bookingQueueService);
+        HotelGuest guestController = new HotelGuest(inventoryService, bookingQueueService, serviceManagementService);
 
         while (true) {
 
@@ -189,39 +191,103 @@ public class Main {
             System.out.println("\n===== Guest Menu =====");
             System.out.println("1. Search for Rooms");
             System.out.println("2. Request Booking");
-            System.out.println("3. Logout");
+            System.out.println("3. Add Services to Reservation");
+            System.out.println("4. View My Reservations");
+            System.out.println("5. Logout");
 
             System.out.print("Enter choice: ");
-            int choice = Integer.parseInt(scanner.nextLine());
-            
-            try {
-            	switch (choice) {
 
-	                case 1 -> viewInventory(guest.searchRooms());
-	                
-	                case 2 -> {
-	
-	                    System.out.print("Enter room type: ");
-	                    String roomType = scanner.nextLine();
-	
-	                    System.out.print("Enter number of rooms: ");
-	                    int quantity = Integer.parseInt(scanner.nextLine());
-	
-	                    guest.requestBooking(user.getEmail(), roomType, quantity);
-	                }
-	
-	                case 3 -> {
-	                    System.out.println("Logged out.");
-	                    return;
-	                }
-	
-	                default -> System.out.println("Invalid choice");
-            	}
-            }
-            catch(InventoryException e) {
+            int choice = Integer.parseInt(scanner.nextLine());
+
+            try {
+
+                switch (choice) {
+
+                    case 1 -> viewInventory(guest.searchRooms());
+
+                    case 2 -> {
+
+                        System.out.print("Enter room type: ");
+                        String roomType = scanner.nextLine();
+
+                        System.out.print("Enter number of rooms: ");
+                        int quantity = Integer.parseInt(scanner.nextLine());
+
+                        guest.requestBooking(user.getEmail(), roomType, quantity);
+                    }
+
+                    case 3 -> {
+
+                        Collection<Reservation> reservations =
+                                guest.viewMyReservations(user.getEmail());
+
+                        viewReservations(reservations, guest);
+
+                        if (reservations.isEmpty()) {
+                            break;
+                        }
+
+                        System.out.print("Enter reservation ID: ");
+                        String reservationId = scanner.nextLine();
+
+                        while (true) {
+
+                            System.out.println("\nSelect service:");
+                            System.out.println("1. Breakfast");
+                            System.out.println("2. Spa");
+                            System.out.println("3. Airport Pickup");
+                            System.out.println("4. Done");
+
+                            int serviceChoice = Integer.parseInt(scanner.nextLine());
+
+                            switch(serviceChoice) {
+
+                                case 1 -> {
+                                    Service service = new Service("Breakfast", 500);
+                                    guest.addService(reservationId, service);
+                                    System.out.println(service.getName() + " added successfully.");
+                                }
+
+                                case 2 -> {
+                                    Service service = new Service("Spa", 1500);
+                                    guest.addService(reservationId, service);
+                                    System.out.println(service.getName() + " added successfully.");
+                                }
+
+                                case 3 -> {
+                                    Service service = new Service("Airport Pickup", 1000);
+                                    guest.addService(reservationId, service);
+                                    System.out.println(service.getName() + " added successfully.");
+                                }
+
+                                case 4 -> {
+                                    System.out.println("Finished adding services.");
+                                    break;
+                                }
+
+                                default -> System.out.println("Invalid service.");
+                            }
+
+                            if(serviceChoice == 4) {
+                                break;
+                            }
+                        }
+                    }
+
+                    case 4 -> viewReservations(
+                            guest.viewMyReservations(user.getEmail()), guest);
+
+                    case 5 -> {
+                        System.out.println("Logged out.");
+                        return;
+                    }
+
+                    default -> System.out.println("Invalid choice.");
+                }
+
+            } catch (InventoryException e) {
                 System.out.println("Error: " + e.getMessage());
             }
-            
         }
     }
 
@@ -254,6 +320,33 @@ public class Main {
 
         for(Reservation r : requests) {
             System.out.println(i++ + ". " + r);
+        }
+    }
+    
+    private static void viewReservations(
+            Collection<Reservation> reservations,
+            HotelGuest guest) {
+
+        if (reservations.isEmpty()) {
+            System.out.println("No reservations found.");
+            return;
+        }
+
+        System.out.println("\n===== Your Reservations =====");
+
+        for (Reservation r : reservations) {
+
+            System.out.println("\nReservation ID: " + r.getReservationId());
+            System.out.println("Room Type: " + r.getRoomType());
+            System.out.println("Rooms: " + r.getAssignedRooms());
+
+            List<Service> services = guest.getServices(r.getReservationId());
+
+            if (services.isEmpty()) {
+                System.out.println("Services: None");
+            } else {
+                System.out.println("Services: " + services);
+            }
         }
     }
 }
