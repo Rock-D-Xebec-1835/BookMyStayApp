@@ -107,7 +107,9 @@ public class Main {
             System.out.println("5. View Inventory");
             System.out.println("6. Process next Request");
             System.out.println("7. View Pending Requests");
-            System.out.println("8. Logout");
+            System.out.println("8. View Booking History");
+            System.out.println("9. Generate Boking Report");
+            System.out.println("10. Logout");
 
             System.out.print("Enter choice: ");
             int choice = Integer.parseInt(scanner.nextLine());
@@ -169,8 +171,12 @@ public class Main {
                     case 6 -> bookingQueueService.processNextBooking();
                     
                     case 7 -> viewPendingRequests(bookingQueueService);
+                    
+                    case 8 -> viewBookingHistory(bookingQueueService);
+                    
+                    case 9 -> bookingQueueService.generateReport();
 
-                    case 8 -> {
+                    case 10 -> {
                         System.out.println("Logged out.");
                         return;
                     }
@@ -193,7 +199,8 @@ public class Main {
             System.out.println("2. Request Booking");
             System.out.println("3. Add Services to Reservation");
             System.out.println("4. View My Reservations");
-            System.out.println("5. Logout");
+            System.out.println("5. Cancel Reservation");
+            System.out.println("6. Logout");
 
             System.out.print("Enter choice: ");
 
@@ -276,8 +283,27 @@ public class Main {
 
                     case 4 -> viewReservations(
                             guest.viewMyReservations(user.getEmail()), guest);
-
+                    
                     case 5 -> {
+
+                        Collection<Reservation> reservations =
+                                guest.viewMyReservations(user.getEmail());
+
+                        viewReservations(reservations, guest);
+
+                        if(reservations.isEmpty()) {
+                            break;
+                        }
+
+                        System.out.print("Enter reservation ID to cancel: ");
+                        String reservationId = scanner.nextLine();
+
+                        guest.cancelReservation(reservationId);
+
+                        System.out.println("Reservation cancelled successfully.");
+                    }
+
+                    case 6 -> {
                         System.out.println("Logged out.");
                         return;
                     }
@@ -347,6 +373,24 @@ public class Main {
             } else {
                 System.out.println("Services: " + services);
             }
+        }
+    }
+    
+    private static void viewBookingHistory(
+            BookingQueueService bookingQueueService) {
+
+        List<Reservation> history =
+                bookingQueueService.getBookingHistory();
+
+        if(history.isEmpty()) {
+            System.out.println("No booking history.");
+            return;
+        }
+
+        System.out.println("\n===== Booking History =====");
+
+        for(Reservation r : history) {
+            System.out.println(r);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.bookmystayapp.service;
 import com.bookmystayapp.model.*;
+import com.bookmystayapp.exception.*;
 import java.util.Set;
 import java.util.Queue;
 import java.util.Map;
@@ -14,10 +15,15 @@ public class BookingQueueService {
     private Queue<Reservation> bookingQueue;
     private InventoryService inventoryService;
     private Map<String, Reservation> confirmedReservations = new HashMap<>();
+    private List<Reservation> bookingHistory;
+    private int totalBookings;
+    private int totalCancellations;
+    private int totalRoomsBooked;
 
     public BookingQueueService(InventoryService inventoryService) {
         this.inventoryService = inventoryService;
         this.bookingQueue = new LinkedList<>();
+        this.bookingHistory = new ArrayList<Reservation>();
     }
 
     public void submitBookingRequest(Reservation reservation) {
@@ -49,6 +55,9 @@ public class BookingQueueService {
         		    + allocated
         		);
         		confirmedReservations.put(reservation.getReservationId(), reservation);
+        		bookingHistory.add(reservation);
+        		totalBookings++;
+        		totalRoomsBooked += reservation.getNoOfRooms();
         } catch (Exception e) {
 
             System.out.println("Booking failed → " + e.getMessage());
@@ -63,16 +72,59 @@ public class BookingQueueService {
     	return bookingQueue.size();
     }
     
-    public Collection<Reservation> getReservationsByUser(String email) {
-
-        List<Reservation> results = new ArrayList<>();
-
-        for(Reservation r : confirmedReservations.values()) {
+    public List<Reservation> getReservationsByUser(String email) {
+        List<Reservation> result = new ArrayList<>();
+        for(Reservation r : bookingHistory) {
             if(r.getGuestEmail().equals(email)) {
-                results.add(r);
+                result.add(r);
             }
         }
-
-        return results;
+        return result;
     }
+    
+    public List<Reservation> getBookingHistory() {
+        return bookingHistory;
+    }
+    
+    public void cancelReservation(String reservationId) {
+        Reservation reservation = confirmedReservations.get(reservationId);
+        if(reservation == null) throw new InventoryException("Reservation not found");
+        inventoryService.increaseRoomCount(reservation.getRoomType(), reservation.getNoOfRooms());
+        confirmedReservations.remove(reservationId);
+        totalCancellations++;
+        System.out.println("Reservation cancelled successfully.");
+    }
+    
+    public void generateReport() {
+
+        System.out.println("\n===== HOTEL BOOKING REPORT =====");
+
+        if(bookingHistory.isEmpty()) {
+            System.out.println("No bookings yet.");
+            return;
+        }
+
+        System.out.println("\n--- Reservation Details ---");
+
+        for(Reservation r : bookingHistory) {
+
+            System.out.println(
+                    r.getReservationId()
+                    + " | "
+                    + r.getGuestEmail()
+                    + " | "
+                    + r.getRoomType()
+                    + " | Rooms: "
+                    + r.getAssignedRooms()
+            );
+        }
+
+        System.out.println("\n--- Summary ---");
+
+        System.out.println("Total Reservations : " + bookingHistory.size());
+        System.out.println("Total Bookings     : " + totalBookings);
+        System.out.println("Total Cancellations: " + totalCancellations);
+        System.out.println("Total Rooms Booked : " + totalRoomsBooked);
+    }
+    
 }

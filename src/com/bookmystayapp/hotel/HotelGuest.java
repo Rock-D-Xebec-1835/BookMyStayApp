@@ -40,4 +40,8 @@ public class HotelGuest {
 	public List<Service> getServices(String reservationId) {
 	    return serviceManagementService.getServicesForReservation(reservationId);
 	}
+	
+	public void cancelReservation(String reservationId) {
+	    bookingQueueService.cancelReservation(reservationId);
+	}
 }
