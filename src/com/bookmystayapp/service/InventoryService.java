@@ -1,6 +1,8 @@
 package com.bookmystayapp.service;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 
 import com.bookmystayapp.exception.InventoryException;
 import com.bookmystayapp.model.RoomType;
@@ -63,6 +65,21 @@ public class InventoryService {
 	}
 	
 	public Collection<RoomType> getAllRoomInventory(){
-		return inventoryRepository.getAllRoomTypes();
+		return inventoryRepository.getAllRoomInventory();
+	}
+	
+	public List<RoomType> searchRooms() {
+
+	    Collection<RoomType> rooms = inventoryRepository.getAllRoomInventory();
+
+	    List<RoomType> availableRooms = new ArrayList<>();
+
+	    for(RoomType room : rooms) {
+	        if(room.getAvailableRooms() > 0) {
+	            availableRooms.add(room);
+	        }
+	    }
+
+	    return availableRooms;
 	}
 }

@@ -183,7 +183,7 @@ public class Main {
         while (true) {
 
             System.out.println("\n===== Guest Menu =====");
-            System.out.println("1. View Rooms");
+            System.out.println("1. Search for Rooms");
             System.out.println("2. Logout");
 
             System.out.print("Enter choice: ");
@@ -191,7 +191,7 @@ public class Main {
 
             switch (choice) {
 
-                case 1 -> viewInventory(guest.viewInventory());
+                case 1 -> viewInventory(guest.searchRooms());
 
                 case 2 -> {
                     System.out.println("Logged out.");

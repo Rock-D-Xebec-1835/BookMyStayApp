@@ -64,7 +64,7 @@ public class InventoryRepository {
 		return roomInventory.get(type).getAvailableRooms();
 	}
 	
-	public Collection<RoomType> getAllRoomTypes(){
+	public Collection<RoomType> getAllRoomInventory(){
 		return roomInventory.values();
 	}
 	

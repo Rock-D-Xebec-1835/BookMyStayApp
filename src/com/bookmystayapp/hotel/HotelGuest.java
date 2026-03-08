@@ -1,6 +1,7 @@
 package com.bookmystayapp.hotel;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.bookmystayapp.exception.InventoryException;
 import com.bookmystayapp.model.RoomType;
@@ -13,7 +14,7 @@ public class HotelGuest {
 		this.inventoryService = inventoryService;
 	}
 	
-	public Collection<RoomType> viewInventory(){
-		return inventoryService.getAllRoomInventory();
-	}
+	public List<RoomType> searchRooms() {
+        return inventoryService.searchRooms();
+    }
 }
